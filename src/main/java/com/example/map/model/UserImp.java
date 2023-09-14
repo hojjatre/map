@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -54,6 +55,9 @@ public class UserImp {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
+
+    @OneToMany(mappedBy = "userImp", cascade = CascadeType.ALL)
+    private List<Report> reports;
 
     public UserImp(String username, String email, String password) {
         this.username = username;

@@ -13,4 +13,13 @@ public class MapBugs {
     Boolean noCarPath;
     Boolean other;
 
+    public MapBugs(){
+        noEntry =false;
+        deadend = false;
+        flowDirection = false;
+        dun = false;
+        noCarPath = false;
+        other = false;
+    }
+
 }

@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 public class UserCache {
-    @Getter
     RMapCache<String, String> userCache;
     private final RedisConfig redisConfig;
     private final String nameCache = "token";

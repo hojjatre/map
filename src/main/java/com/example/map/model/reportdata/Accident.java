@@ -7,10 +7,15 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 public class Accident {
     Boolean light;
     Boolean heavy;
     Boolean oppositeLine;
+
+    public Accident() {
+        light = false;
+        heavy = false;
+        oppositeLine = false;
+    }
 }

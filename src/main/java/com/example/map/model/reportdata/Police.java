@@ -7,10 +7,15 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 public class Police {
     Boolean cop;
     Boolean undercoverCop;
     Boolean oppositeLine;
+
+    public Police(){
+        cop = false;
+        undercoverCop = false;
+        oppositeLine = false;
+    }
 }

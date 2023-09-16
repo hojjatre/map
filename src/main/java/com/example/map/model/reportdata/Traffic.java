@@ -7,10 +7,15 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 public class Traffic {
     Boolean light;
     Boolean semiHeavy;
     Boolean lock;
+
+    public Traffic(){
+        light = false;
+        semiHeavy = false;
+        lock = false;
+    }
 }

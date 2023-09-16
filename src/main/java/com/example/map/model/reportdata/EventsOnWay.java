@@ -7,10 +7,15 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 public class EventsOnWay {
     Boolean constructionOperations;
     Boolean hole;
     Boolean roadBlock;
+
+    public EventsOnWay(){
+        constructionOperations = false;
+        hole = false;
+        roadBlock = false;
+    }
 }

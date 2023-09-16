@@ -7,10 +7,15 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 public class WeatherConditions {
     Boolean slipRoad;
     Boolean fog;
     Boolean chains;
+
+    public WeatherConditions(){
+        slipRoad = false;
+        fog = false;
+        chains = false;
+    }
 }

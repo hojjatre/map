@@ -16,9 +16,9 @@ public class AppConfig implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        Role admin = new Role(ERole.ROLE_ADMIN);
-        roleRepository.save(admin);
-        Role user = new Role(ERole.ROLE_USER);
-        roleRepository.save(user);
+//        Role admin = new Role(ERole.ROLE_ADMIN);
+//        roleRepository.save(admin);
+//        Role user = new Role(ERole.ROLE_USER);
+//        roleRepository.save(user);
     }
 }

@@ -7,9 +7,13 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 public class Camera {
     Boolean speedControl;
     Boolean redLight;
+
+    public Camera(){
+        speedControl = false;
+        redLight = false;
+    }
 }

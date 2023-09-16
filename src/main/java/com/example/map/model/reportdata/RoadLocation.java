@@ -7,7 +7,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 public class RoadLocation {
     Boolean gasStation;
@@ -16,4 +15,13 @@ public class RoadLocation {
     Boolean parking;
     Boolean welfareServices;
     Boolean police;
+
+    public RoadLocation(){
+        gasStation = false;
+        fillingStation = false;
+        redCrescent = false;
+        parking = false;
+        welfareServices = false;
+        police = false;
+    }
 }

@@ -27,4 +27,10 @@ public class ReportController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return reportService.createReport(authentication, reportRequest);
     }
+
+    @PostMapping("/like-dislike")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Object> likeOrDislikeReport(@RequestParam("id") Long id, @RequestParam("decision") String decision) throws ParseException {
+        return reportService.likeOrDislikeReport(id, decision);
+    }
 }

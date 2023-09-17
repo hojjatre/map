@@ -21,6 +21,7 @@ import org.locationtech.jts.geom.PrecisionModel;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 import org.redisson.api.RMapCache;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -198,5 +199,27 @@ public class ReportService {
         return ResponseEntity.ok(reportMapper.entityToDTO(report));
     }
 
-
+    public ResponseEntity<Object> likeOrDislikeReport(Long id, String decision) throws ParseException {
+        Optional<Report> optionalReport = reportRepository.findById(id);
+        Report report = optionalReport.get();
+        reportMapper = ReportMapper.instance;
+        reports = reportCache.getReports();
+        if (reports.containsKey(id)){
+            ReportViewRedis reportRedis = reports.get(id);
+            if (decision.equals("like")){
+                report.setDate(DateUtils.addMinutes(reportRedis.getDate(), 5));
+                reports.remove(id);
+                reportRepository.save(report);
+                reports.put(id, reportMapper.entityToDTO(report));
+                return new ResponseEntity<>(reportMapper.entityToDTO(report), HttpStatus.OK);
+            } else if (decision.equals("dislike")) {
+                report.setDate(DateUtils.addMinutes(reportRedis.getDate(), -5));
+                reports.remove(id);
+                reportRepository.save(report);
+                reports.put(id, reportMapper.entityToDTO(report));
+                return new ResponseEntity<>(reportMapper.entityToDTO(report), HttpStatus.OK);
+            }
+        }
+        return ResponseEntity.ok("The Report not exist");
+    }
 }

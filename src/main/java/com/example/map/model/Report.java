@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Type;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Point;
 
 import java.util.Date;
 @Entity
@@ -39,8 +40,8 @@ public class Report {
     @Enumerated(EnumType.STRING)
     private EReport reportType;
 //    @Type(type = "org.hibernate.spatial.GeometryType")
-//    @Column(columnDefinition = "Geometry")
-    private String coordinate;
+//    @Column(columnDefinition = "point")
+    private Point coordinate;
     @Column(name = "report_data", columnDefinition = "JSON")
     private String reportData;
     private Date date;
@@ -50,7 +51,7 @@ public class Report {
     @JoinColumn(name = "user_id")
     private UserImp userImp;
 
-    public Report(EReport reportType, String coordinate, String reportData, Date date, boolean checkStatus, UserImp userImp) {
+    public Report(EReport reportType, Point coordinate, String reportData, Date date, boolean checkStatus, UserImp userImp) {
         this.reportType = reportType;
         this.coordinate = coordinate;
         this.reportData = reportData;

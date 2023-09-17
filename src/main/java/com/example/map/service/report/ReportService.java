@@ -61,7 +61,12 @@ public class ReportService {
             String jsonData = objectMapper.writeValueAsString(accident);
             report = new Report(EReport.ACCIDENT, reportRequest.getCoordinate(), jsonData,
                     DateUtils.addMinutes(currentTime, reportTiming.getACCIDENT()), true, userImp);
-            reportRepository.save(report);
+            if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
+                reportRepository.save(report);
+                reportCache.addReportToCache(reportMapper.entityToDTO(report));
+            } else {
+                return ResponseEntity.ok("It's SCAM.");
+            }
         } else if (reportRequest.getReportType().equals("camera")) {
             Camera camera = new Camera();
             if(reportRequest.getReportData().equals("speedControl")){
@@ -72,6 +77,7 @@ public class ReportService {
             String jsonData = objectMapper.writeValueAsString(camera);
             report = new Report(EReport.CAMERA, reportRequest.getCoordinate(), jsonData,
                     DateUtils.addMinutes(currentTime, reportTiming.getCAMERA()), false, userImp);
+            reportCache.addReportToCache(reportMapper.entityToDTO(report));
         } else if (reportRequest.getReportType().equals("events_on_way")) {
             EventsOnWay eventsOnWay = new EventsOnWay();
             if (reportRequest.getReportData().equals("constructionOperations")){
@@ -84,7 +90,12 @@ public class ReportService {
             String jsonData = objectMapper.writeValueAsString(eventsOnWay);
             report = new Report(EReport.EVENTS_ON_WAY, reportRequest.getCoordinate(), jsonData,
                     DateUtils.addMinutes(currentTime, reportTiming.getEVENTSONWAY()), true, userImp);
-            reportRepository.save(report);
+            if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
+                reportRepository.save(report);
+                reportCache.addReportToCache(reportMapper.entityToDTO(report));
+            }else {
+                return ResponseEntity.ok("It's SCAM.");
+            }
         } else if (reportRequest.getReportType().equals("map_bugs")) {
             MapBugs mapBugs = new MapBugs();
             if (reportRequest.getReportData().equals("noEntry")){
@@ -103,6 +114,7 @@ public class ReportService {
             String jsonData = objectMapper.writeValueAsString(mapBugs);
             report = new Report(EReport.MAP_BUGS, reportRequest.getCoordinate(), jsonData,
                     DateUtils.addMinutes(currentTime, reportTiming.getMAPBUGS()), false, userImp);
+            reportCache.addReportToCache(reportMapper.entityToDTO(report));
         } else if (reportRequest.getReportType().equals("police")) {
             Police police = new Police();
             if (reportRequest.getReportData().equals("cop")){
@@ -115,7 +127,12 @@ public class ReportService {
             String jsonData = objectMapper.writeValueAsString(police);
             report = new Report(EReport.POLICE, reportRequest.getCoordinate(), jsonData,
                     DateUtils.addMinutes(currentTime, reportTiming.getPOLICE()), true, userImp);
-            reportRepository.save(report);
+            if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
+                reportRepository.save(report);
+                reportCache.addReportToCache(reportMapper.entityToDTO(report));
+            }else {
+                return ResponseEntity.ok("It's SCAM.");
+            }
         } else if (reportRequest.getReportType().equals("road_location")) {
             RoadLocation roadLocation = new RoadLocation();
             if (reportRequest.getReportData().equals("gasStation")){
@@ -134,6 +151,7 @@ public class ReportService {
             String jsonData = objectMapper.writeValueAsString(roadLocation);
             report = new Report(EReport.ROAD_LOCATION, reportRequest.getCoordinate(), jsonData,
                     DateUtils.addMinutes(currentTime, reportTiming.getROADLOCATION()), false, userImp);
+            reportCache.addReportToCache(reportMapper.entityToDTO(report));
         } else if (reportRequest.getReportType().equals("speed_bump")) {
             SpeedBump speedBump = new SpeedBump();
             if (reportRequest.getReportData().equals("speedBump")){
@@ -142,6 +160,7 @@ public class ReportService {
             String jsonData = objectMapper.writeValueAsString(speedBump);
             report = new Report(EReport.SPEED_BUMP, reportRequest.getCoordinate(), jsonData,
                     DateUtils.addMinutes(currentTime, reportTiming.getSPEEDBUMP()), false, userImp);
+            reportCache.addReportToCache(reportMapper.entityToDTO(report));
         } else if (reportRequest.getReportType().equals("traffid")) {
             Traffic traffic = new Traffic();
             if (reportRequest.getReportData().equals("light")){
@@ -154,7 +173,12 @@ public class ReportService {
             String jsonData = objectMapper.writeValueAsString(traffic);
             report = new Report(EReport.TRAFFIC, reportRequest.getCoordinate(), jsonData,
                     DateUtils.addMinutes(currentTime, reportTiming.getTRAFFIC()), true, userImp);
-            reportRepository.save(report);
+            if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
+                reportRepository.save(report);
+                reportCache.addReportToCache(reportMapper.entityToDTO(report));
+            }else {
+                return ResponseEntity.ok("It's SCAM.");
+            }
         } else if (reportRequest.getReportType().equals("weather_conditions")) {
             WeatherConditions weatherConditions = new WeatherConditions();
             if (reportRequest.getReportData().equals("slipRoad")){
@@ -167,8 +191,8 @@ public class ReportService {
             String jsonData = objectMapper.writeValueAsString(weatherConditions);
             report = new Report(EReport.WEATHER_CONDITIONS, reportRequest.getCoordinate(), jsonData,
                     DateUtils.addMinutes(currentTime, reportTiming.getWEATHERCONDITIONS()), false, userImp);
+            reportCache.addReportToCache(reportMapper.entityToDTO(report));
         }
-        reportCache.addReportToCache(reportMapper.entityToDTO(report));
         return ResponseEntity.ok(reportMapper.entityToDTO(report));
     }
 }

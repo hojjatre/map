@@ -17,10 +17,12 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class ReportCache {
 
-    RMapCache<String,ReportViewRedis> reports;
+    RMapCache<String,ReportViewRedis> reportsNotChecked;
+    RMapCache<Long,ReportViewRedis> reports;
 //    RSetCache<ReportViewRedis> reports;
     private final RedisConfig redisConfig;
     private final String nameCache = "report";
+    private final String nameCache2 = "reportNotChecked";
 
     private ReportTiming reportTiming = new ReportTiming();
 
@@ -44,9 +46,9 @@ public class ReportCache {
         return true;
     }
     public void addReportToCache(ReportViewRedis report){
-        reports = redisConfig.redissonClient().getMapCache(nameCache);
-        String KEY = report.getUsername() + "," + report.getCoordinate() + "," + report.getReportType() + "," + report.getReportData();
         if (report.getCheckStatus()){
+            reports = redisConfig.redissonClient().getMapCache(nameCache);
+            Long KEY = report.getId();
             // no need for permission
             EReport type = report.getReportType();
             if(type.equals(EReport.ACCIDENT)){
@@ -71,24 +73,31 @@ public class ReportCache {
         }
         else {
             // need for permission
+            reportsNotChecked = redisConfig.redissonClient().getMapCache(nameCache2);
+            String KEY = report.getUsername() + "," + report.getCoordinate() + "," + report.getReportType() + "," + report.getReportData();
             EReport type = report.getReportType();
             if (type.equals(EReport.CAMERA)){
-                reports.put(KEY, report);
+                reportsNotChecked.put(KEY, report, 60, TimeUnit.MINUTES);
             } else if (type.equals(EReport.MAP_BUGS)) {
-                reports.put(KEY, report);
+                reportsNotChecked.put(KEY, report, 60, TimeUnit.MINUTES);
             } else if (type.equals(EReport.ROAD_LOCATION)) {
-                reports.put(KEY, report);
+                reportsNotChecked.put(KEY, report, 60, TimeUnit.MINUTES);
             } else if (type.equals(EReport.SPEED_BUMP)) {
-                reports.put(KEY, report);
+                reportsNotChecked.put(KEY, report, 60, TimeUnit.MINUTES);
             } else if (type.equals(EReport.WEATHER_CONDITIONS)) {
-                reports.put(KEY, report);
+                reportsNotChecked.put(KEY, report, 60, TimeUnit.MINUTES);
             }
         }
     }
 
-    public RMapCache<String,ReportViewRedis> getReports(){
+
+    public RMapCache<Long,ReportViewRedis> getReports(){
         reports = redisConfig.redissonClient().getMapCache(nameCache);
         return reports;
+    }
+    public RMapCache<String,ReportViewRedis> getReportsNotChecked(){
+        reportsNotChecked = redisConfig.redissonClient().getMapCache(nameCache2);
+        return reportsNotChecked;
     }
 
 }

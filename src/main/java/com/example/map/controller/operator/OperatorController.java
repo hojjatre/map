@@ -3,6 +3,7 @@ package com.example.map.controller.operator;
 import com.example.map.dto.operator.CheckedRequest;
 import com.example.map.dto.report.ReportViewRedis;
 import com.example.map.service.operator.OperatorService;
+import org.locationtech.jts.io.ParseException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,7 @@ public class OperatorController {
 
     @PostMapping("/checked-report")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Object> checkedReport(@RequestBody CheckedRequest checkedRequest){
+    public ResponseEntity<Object> checkedReport(@RequestBody CheckedRequest checkedRequest) throws ParseException {
         return operatorService.checkedReport(checkedRequest);
     }
 }

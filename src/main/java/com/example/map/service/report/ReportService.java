@@ -4,6 +4,7 @@ import com.example.map.cachemanager.report.ReportCache;
 import com.example.map.config.ReportTiming;
 import com.example.map.dto.report.ReportMapper;
 import com.example.map.dto.report.ReportRequest;
+import com.example.map.dto.report.ReportViewRedis;
 import com.example.map.model.EReport;
 import com.example.map.model.Report;
 import com.example.map.model.UserImp;
@@ -15,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.time.DateUtils;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
@@ -33,14 +35,14 @@ public class ReportService {
     private ReportTiming reportTiming = new ReportTiming();
     private final UserRepository userRepository;
     private ReportMapper reportMapper;
+    private RMapCache<Long, ReportViewRedis> reports;
     public ReportService(ReportRepository reportRepository, ReportCache reportCache, UserRepository userRepository) {
         this.reportRepository = reportRepository;
         this.reportCache = reportCache;
         this.userRepository = userRepository;
     }
-    public Geometry stringToGeometry(String wkt) throws ParseException {
-//        GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
-        return new WKTReader().read(wkt);
+    public Point stringToGeometry(String wkt) throws ParseException {
+        return (Point) new WKTReader().read(wkt);
     }
 
     public ResponseEntity<Object> createReport(Authentication authentication, ReportRequest reportRequest) throws ParseException, JsonProcessingException {
@@ -59,7 +61,7 @@ public class ReportService {
                 accident.setOppositeLine(true);
             }
             String jsonData = objectMapper.writeValueAsString(accident);
-            report = new Report(EReport.ACCIDENT, reportRequest.getCoordinate(), jsonData,
+            report = new Report(EReport.ACCIDENT, stringToGeometry(reportRequest.getCoordinate()), jsonData,
                     DateUtils.addMinutes(currentTime, reportTiming.getACCIDENT()), true, userImp);
             if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
                 reportRepository.save(report);
@@ -75,7 +77,7 @@ public class ReportService {
                 camera.setRedLight(true);
             }
             String jsonData = objectMapper.writeValueAsString(camera);
-            report = new Report(EReport.CAMERA, reportRequest.getCoordinate(), jsonData,
+            report = new Report(EReport.CAMERA, stringToGeometry(reportRequest.getCoordinate()), jsonData,
                     DateUtils.addMinutes(currentTime, reportTiming.getCAMERA()), false, userImp);
             reportCache.addReportToCache(reportMapper.entityToDTO(report));
         } else if (reportRequest.getReportType().equals("events_on_way")) {
@@ -88,7 +90,7 @@ public class ReportService {
                 eventsOnWay.setRoadBlock(true);
             }
             String jsonData = objectMapper.writeValueAsString(eventsOnWay);
-            report = new Report(EReport.EVENTS_ON_WAY, reportRequest.getCoordinate(), jsonData,
+            report = new Report(EReport.EVENTS_ON_WAY, stringToGeometry(reportRequest.getCoordinate()), jsonData,
                     DateUtils.addMinutes(currentTime, reportTiming.getEVENTSONWAY()), true, userImp);
             if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
                 reportRepository.save(report);
@@ -112,7 +114,7 @@ public class ReportService {
                 mapBugs.setOther(true);
             }
             String jsonData = objectMapper.writeValueAsString(mapBugs);
-            report = new Report(EReport.MAP_BUGS, reportRequest.getCoordinate(), jsonData,
+            report = new Report(EReport.MAP_BUGS, stringToGeometry(reportRequest.getCoordinate()), jsonData,
                     DateUtils.addMinutes(currentTime, reportTiming.getMAPBUGS()), false, userImp);
             reportCache.addReportToCache(reportMapper.entityToDTO(report));
         } else if (reportRequest.getReportType().equals("police")) {
@@ -125,7 +127,7 @@ public class ReportService {
                 police.setOppositeLine(true);
             }
             String jsonData = objectMapper.writeValueAsString(police);
-            report = new Report(EReport.POLICE, reportRequest.getCoordinate(), jsonData,
+            report = new Report(EReport.POLICE, stringToGeometry(reportRequest.getCoordinate()), jsonData,
                     DateUtils.addMinutes(currentTime, reportTiming.getPOLICE()), true, userImp);
             if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
                 reportRepository.save(report);
@@ -149,7 +151,7 @@ public class ReportService {
                 roadLocation.setPolice(true);
             }
             String jsonData = objectMapper.writeValueAsString(roadLocation);
-            report = new Report(EReport.ROAD_LOCATION, reportRequest.getCoordinate(), jsonData,
+            report = new Report(EReport.ROAD_LOCATION, stringToGeometry(reportRequest.getCoordinate()), jsonData,
                     DateUtils.addMinutes(currentTime, reportTiming.getROADLOCATION()), false, userImp);
             reportCache.addReportToCache(reportMapper.entityToDTO(report));
         } else if (reportRequest.getReportType().equals("speed_bump")) {
@@ -158,7 +160,7 @@ public class ReportService {
                 speedBump.setSpeedBump(true);
             }
             String jsonData = objectMapper.writeValueAsString(speedBump);
-            report = new Report(EReport.SPEED_BUMP, reportRequest.getCoordinate(), jsonData,
+            report = new Report(EReport.SPEED_BUMP, stringToGeometry(reportRequest.getCoordinate()), jsonData,
                     DateUtils.addMinutes(currentTime, reportTiming.getSPEEDBUMP()), false, userImp);
             reportCache.addReportToCache(reportMapper.entityToDTO(report));
         } else if (reportRequest.getReportType().equals("traffid")) {
@@ -171,7 +173,7 @@ public class ReportService {
                 traffic.setLock(true);
             }
             String jsonData = objectMapper.writeValueAsString(traffic);
-            report = new Report(EReport.TRAFFIC, reportRequest.getCoordinate(), jsonData,
+            report = new Report(EReport.TRAFFIC, stringToGeometry(reportRequest.getCoordinate()), jsonData,
                     DateUtils.addMinutes(currentTime, reportTiming.getTRAFFIC()), true, userImp);
             if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
                 reportRepository.save(report);
@@ -189,10 +191,12 @@ public class ReportService {
                 weatherConditions.setChains(true);
             }
             String jsonData = objectMapper.writeValueAsString(weatherConditions);
-            report = new Report(EReport.WEATHER_CONDITIONS, reportRequest.getCoordinate(), jsonData,
+            report = new Report(EReport.WEATHER_CONDITIONS, stringToGeometry(reportRequest.getCoordinate()), jsonData,
                     DateUtils.addMinutes(currentTime, reportTiming.getWEATHERCONDITIONS()), false, userImp);
             reportCache.addReportToCache(reportMapper.entityToDTO(report));
         }
         return ResponseEntity.ok(reportMapper.entityToDTO(report));
     }
+
+
 }

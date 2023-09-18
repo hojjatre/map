@@ -5,7 +5,6 @@ import com.example.map.config.ReportTiming;
 import com.example.map.dto.report.ReportMapper;
 import com.example.map.dto.report.ReportRequest;
 import com.example.map.dto.report.ReportViewRedis;
-import com.example.map.dto.report.RoutingRequest;
 import com.example.map.model.EReport;
 import com.example.map.model.Report;
 import com.example.map.model.UserImp;
@@ -15,13 +14,12 @@ import com.example.map.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.time.DateUtils;
-import org.geolatte.geom.crs.CoordinateReferenceSystem;
-import org.locationtech.jts.geom.*;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.PrecisionModel;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
-import org.locationtech.jts.io.WKTWriter;
-import org.locationtech.jts.operation.buffer.BufferOp;
-import org.locationtech.jts.operation.buffer.BufferParameters;
 import org.redisson.api.RMapCache;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,9 +29,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -229,27 +225,5 @@ public class ReportService {
             }
         }
         return ResponseEntity.ok("The Report not exist");
-    }
-
-    //routing
-    public ResponseEntity<List<ReportViewRedis>> routing(RoutingRequest routingRequest) throws ParseException {
-        List<ReportViewRedis> reportsWithinBuffer = new ArrayList<>();
-        WKTReader wktReader = new WKTReader();
-        LineString userRoute = (LineString) wktReader.read(routingRequest.getCoordinate());
-        userRoute.setSRID(3857);
-        BufferParameters bufferParameters = new BufferParameters();
-        bufferParameters.setSingleSided(true);
-        BufferOp bufferOp = new BufferOp(userRoute, bufferParameters);
-        Geometry userRouteGeometry = bufferOp.getResultGeometry(10);
-        reports = reportCache.getReports();
-        for (Long id :reports.keySet()) {
-            ReportViewRedis report = reports.get(id);
-            Point reportPoint = (Point) wktReader.read(report.getCoordinate());
-            reportPoint.setSRID(3857);
-            if(reportPoint.intersects(userRouteGeometry)){
-                reportsWithinBuffer.add(report);
-            }
-        }
-        return ResponseEntity.ok(reportsWithinBuffer);
     }
 }

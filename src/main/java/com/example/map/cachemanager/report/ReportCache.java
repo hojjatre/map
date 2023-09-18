@@ -12,6 +12,8 @@ import org.redisson.api.RMapCache;
 import org.redisson.api.RSetCache;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -31,16 +33,22 @@ public class ReportCache {
     }
 
     public Boolean checkNotScam(ReportViewRedis report){
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
         reports = redisConfig.redissonClient().getMapCache(nameCache);
-        String KEY = report.getUsername() + "," + report.getCoordinate() + "," + report.getReportType() + "," + report.getReportData();
-        if (reports.containsKey(KEY)){
-            ReportViewRedis existReport = reports.get(KEY);
-            long time_difference = existReport.getDate().getTime() - report.getDate().getTime();
-            long minutes_difference = (time_difference / (1000*60)) % 60;
-            System.out.println(minutes_difference);
-            if (minutes_difference <= 5){
-                System.out.println("Not add");
-                return false;
+        for (Long id:reports.keySet()) {
+            String KEY = report.getUsername() + "," + report.getCoordinate() + "," + report.getReportType() + "," + report.getReportData();
+            ReportViewRedis reportViewRedis = reports.get(id);
+            String existsKEY = reportViewRedis.getUsername() + "," + reportViewRedis.getCoordinate() + "," + reportViewRedis.getReportType() + "," + reportViewRedis.getReportData();
+            if (existsKEY.equals(KEY)){
+                ReportViewRedis existReport = reports.get(id);
+                long time_difference = LocalDateTime.parse(report.getDate(), formatter).getMinute() -
+                        LocalDateTime.parse(existReport.getDate(), formatter).getMinute();
+//            long minutes_difference = (time_difference / (1000*60)) % 60;
+                System.out.println(time_difference);
+                if (time_difference <= 5){
+                    System.out.println("Not add");
+                    return false;
+                }
             }
         }
         return true;

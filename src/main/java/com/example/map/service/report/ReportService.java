@@ -26,6 +26,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Optional;
 
@@ -48,7 +51,7 @@ public class ReportService {
 
     public ResponseEntity<Object> createReport(Authentication authentication, ReportRequest reportRequest) throws ParseException, JsonProcessingException {
         UserImp userImp = userRepository.findByUsername(authentication.getName());
-        Date currentTime = new Date();
+        LocalDateTime currentTime = LocalDateTime.now();
         reportMapper = ReportMapper.instance;
         ObjectMapper objectMapper = new ObjectMapper();
         Report report = null;
@@ -63,7 +66,7 @@ public class ReportService {
             }
             String jsonData = objectMapper.writeValueAsString(accident);
             report = new Report(EReport.ACCIDENT, stringToGeometry(reportRequest.getCoordinate()), jsonData,
-                    DateUtils.addMinutes(currentTime, reportTiming.getACCIDENT()), true, userImp);
+                    currentTime.plusMinutes(reportTiming.getACCIDENT()), true, userImp);
             if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
                 reportRepository.save(report);
                 reportCache.addReportToCache(reportMapper.entityToDTO(report));
@@ -79,7 +82,7 @@ public class ReportService {
             }
             String jsonData = objectMapper.writeValueAsString(camera);
             report = new Report(EReport.CAMERA, stringToGeometry(reportRequest.getCoordinate()), jsonData,
-                    DateUtils.addMinutes(currentTime, reportTiming.getCAMERA()), false, userImp);
+                    currentTime.plusMinutes(reportTiming.getCAMERA()), false, userImp);
             reportCache.addReportToCache(reportMapper.entityToDTO(report));
         } else if (reportRequest.getReportType().equals("events_on_way")) {
             EventsOnWay eventsOnWay = new EventsOnWay();
@@ -92,7 +95,7 @@ public class ReportService {
             }
             String jsonData = objectMapper.writeValueAsString(eventsOnWay);
             report = new Report(EReport.EVENTS_ON_WAY, stringToGeometry(reportRequest.getCoordinate()), jsonData,
-                    DateUtils.addMinutes(currentTime, reportTiming.getEVENTSONWAY()), true, userImp);
+                    currentTime.plusMinutes(reportTiming.getEVENTSONWAY()), true, userImp);
             if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
                 reportRepository.save(report);
                 reportCache.addReportToCache(reportMapper.entityToDTO(report));
@@ -116,7 +119,7 @@ public class ReportService {
             }
             String jsonData = objectMapper.writeValueAsString(mapBugs);
             report = new Report(EReport.MAP_BUGS, stringToGeometry(reportRequest.getCoordinate()), jsonData,
-                    DateUtils.addMinutes(currentTime, reportTiming.getMAPBUGS()), false, userImp);
+                    currentTime.plusMinutes(reportTiming.getMAPBUGS()), false, userImp);
             reportCache.addReportToCache(reportMapper.entityToDTO(report));
         } else if (reportRequest.getReportType().equals("police")) {
             Police police = new Police();
@@ -129,7 +132,7 @@ public class ReportService {
             }
             String jsonData = objectMapper.writeValueAsString(police);
             report = new Report(EReport.POLICE, stringToGeometry(reportRequest.getCoordinate()), jsonData,
-                    DateUtils.addMinutes(currentTime, reportTiming.getPOLICE()), true, userImp);
+                    currentTime.plusMinutes(reportTiming.getPOLICE()), true, userImp);
             if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
                 reportRepository.save(report);
                 reportCache.addReportToCache(reportMapper.entityToDTO(report));
@@ -153,7 +156,7 @@ public class ReportService {
             }
             String jsonData = objectMapper.writeValueAsString(roadLocation);
             report = new Report(EReport.ROAD_LOCATION, stringToGeometry(reportRequest.getCoordinate()), jsonData,
-                    DateUtils.addMinutes(currentTime, reportTiming.getROADLOCATION()), false, userImp);
+                    currentTime.plusMinutes(reportTiming.getROADLOCATION()), false, userImp);
             reportCache.addReportToCache(reportMapper.entityToDTO(report));
         } else if (reportRequest.getReportType().equals("speed_bump")) {
             SpeedBump speedBump = new SpeedBump();
@@ -162,9 +165,9 @@ public class ReportService {
             }
             String jsonData = objectMapper.writeValueAsString(speedBump);
             report = new Report(EReport.SPEED_BUMP, stringToGeometry(reportRequest.getCoordinate()), jsonData,
-                    DateUtils.addMinutes(currentTime, reportTiming.getSPEEDBUMP()), false, userImp);
+                    currentTime.plusMinutes(reportTiming.getSPEEDBUMP()), false, userImp);
             reportCache.addReportToCache(reportMapper.entityToDTO(report));
-        } else if (reportRequest.getReportType().equals("traffid")) {
+        } else if (reportRequest.getReportType().equals("traffic")) {
             Traffic traffic = new Traffic();
             if (reportRequest.getReportData().equals("light")){
                 traffic.setLight(true);
@@ -175,7 +178,7 @@ public class ReportService {
             }
             String jsonData = objectMapper.writeValueAsString(traffic);
             report = new Report(EReport.TRAFFIC, stringToGeometry(reportRequest.getCoordinate()), jsonData,
-                    DateUtils.addMinutes(currentTime, reportTiming.getTRAFFIC()), true, userImp);
+                    currentTime.plusMinutes(reportTiming.getTRAFFIC()), true, userImp);
             if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
                 reportRepository.save(report);
                 reportCache.addReportToCache(reportMapper.entityToDTO(report));
@@ -193,13 +196,14 @@ public class ReportService {
             }
             String jsonData = objectMapper.writeValueAsString(weatherConditions);
             report = new Report(EReport.WEATHER_CONDITIONS, stringToGeometry(reportRequest.getCoordinate()), jsonData,
-                    DateUtils.addMinutes(currentTime, reportTiming.getWEATHERCONDITIONS()), false, userImp);
+                    currentTime.plusMinutes(reportTiming.getWEATHERCONDITIONS()), false, userImp);
             reportCache.addReportToCache(reportMapper.entityToDTO(report));
         }
         return ResponseEntity.ok(reportMapper.entityToDTO(report));
     }
 
     public ResponseEntity<Object> likeOrDislikeReport(Long id, String decision) throws ParseException {
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
         Optional<Report> optionalReport = reportRepository.findById(id);
         Report report = optionalReport.get();
         reportMapper = ReportMapper.instance;
@@ -207,13 +211,13 @@ public class ReportService {
         if (reports.containsKey(id)){
             ReportViewRedis reportRedis = reports.get(id);
             if (decision.equals("like")){
-                report.setDate(DateUtils.addMinutes(reportRedis.getDate(), 5));
+                report.setDate(LocalDateTime.parse(reportRedis.getDate(), formatter).plusMinutes(5));
                 reports.remove(id);
                 reportRepository.save(report);
                 reports.put(id, reportMapper.entityToDTO(report));
                 return new ResponseEntity<>(reportMapper.entityToDTO(report), HttpStatus.OK);
             } else if (decision.equals("dislike")) {
-                report.setDate(DateUtils.addMinutes(reportRedis.getDate(), -5));
+                report.setDate(LocalDateTime.parse(reportRedis.getDate(), formatter).minusMinutes(5));
                 reports.remove(id);
                 reportRepository.save(report);
                 reports.put(id, reportMapper.entityToDTO(report));

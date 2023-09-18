@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 @Getter
 @Setter
@@ -17,7 +18,7 @@ public class ReportViewRedis {
     private EReport reportType;
     private String coordinate;
     private String reportData;
-    private Date date;
+    private String date;
     private boolean checkStatus;
     private String username;
     private Long user_id;

@@ -21,7 +21,7 @@ public interface ReportMapper {
 //    @Mapping(source = "date", target = "date")
     @Mapping(expression = "java(timeToString(report.getDate()))", target = "date")
     @Mapping(expression = "java(geomToString(report.getCoordinate()))", target = "coordinate")
-    @Mapping(source = "reportType", target = "reportType")
+    @Mapping(expression = "java(report.getReportType().toString())", target = "reportType")
     @Mapping(source = "checkStatus", target = "checkStatus")
     @Mapping(source = "userImp.username", target = "username")
     @Mapping(source = "userImp.id", target = "user_id")

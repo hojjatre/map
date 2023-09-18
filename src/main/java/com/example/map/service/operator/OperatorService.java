@@ -61,21 +61,21 @@ public class OperatorService {
         if (reports.containsKey(KEY)){
             ReportViewRedis reportRedis = reports.get(KEY);
             Report report = null;
-            if (reportRedis.getReportType().equals(EReport.CAMERA)){
+            if (reportRedis.getReportType().equals("camera")){
                 System.out.println(reportRedis.getUsername());
-                report = new Report(reportRedis.getReportType(), stringToGeometry(reportRedis.getCoordinate()), reportRedis.getReportData(),
+                report = new Report(EReport.CAMERA, stringToGeometry(reportRedis.getCoordinate()), reportRedis.getReportData(),
                         currentTime.plusMinutes(reportTiming.getCAMERA()), true, userRepository.findByUsername(reportRedis.getUsername()));
-            } else if (reportRedis.getReportType().equals(EReport.MAP_BUGS)) {
-                report = new Report(reportRedis.getReportType(), stringToGeometry(reportRedis.getCoordinate()), reportRedis.getReportData(),
+            } else if (reportRedis.getReportType().equals("map_bugs")) {
+                report = new Report(EReport.MAP_BUGS, stringToGeometry(reportRedis.getCoordinate()), reportRedis.getReportData(),
                         currentTime.plusMinutes(reportTiming.getMAPBUGS()), true, userRepository.findByUsername(reportRedis.getUsername()));
-            } else if (reportRedis.getReportType().equals(EReport.ROAD_LOCATION)) {
-                report = new Report(reportRedis.getReportType(), stringToGeometry(reportRedis.getCoordinate()), reportRedis.getReportData(),
+            } else if (reportRedis.getReportType().equals("road_location")) {
+                report = new Report(EReport.ROAD_LOCATION, stringToGeometry(reportRedis.getCoordinate()), reportRedis.getReportData(),
                         currentTime.plusMinutes(reportTiming.getROADLOCATION()), true, userRepository.findByUsername(reportRedis.getUsername()));
-            } else if (reportRedis.getReportType().equals(EReport.SPEED_BUMP)) {
-                report = new Report(reportRedis.getReportType(), stringToGeometry(reportRedis.getCoordinate()), reportRedis.getReportData(),
+            } else if (reportRedis.getReportType().equals("speed_bump")) {
+                report = new Report(EReport.SPEED_BUMP, stringToGeometry(reportRedis.getCoordinate()), reportRedis.getReportData(),
                         currentTime.plusMinutes(reportTiming.getSPEEDBUMP()), true, userRepository.findByUsername(reportRedis.getUsername()));
-            } else if (reportRedis.getReportType().equals(EReport.WEATHER_CONDITIONS)) {
-                report = new Report(reportRedis.getReportType(), stringToGeometry(reportRedis.getCoordinate()), reportRedis.getReportData(),
+            } else if (reportRedis.getReportType().equals("weather_conditions")) {
+                report = new Report(EReport.WEATHER_CONDITIONS, stringToGeometry(reportRedis.getCoordinate()), reportRedis.getReportData(),
                         currentTime.plusMinutes(reportTiming.getWEATHERCONDITIONS()), true, userRepository.findByUsername(reportRedis.getUsername()));
             }
             reports.remove(KEY);

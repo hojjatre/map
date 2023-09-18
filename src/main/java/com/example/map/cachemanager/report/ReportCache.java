@@ -37,6 +37,7 @@ public class ReportCache {
         reports = redisConfig.redissonClient().getMapCache(nameCache);
         for (Long id:reports.keySet()) {
             String KEY = report.getUsername() + "," + report.getCoordinate() + "," + report.getReportType() + "," + report.getReportData();
+            String KEY_WithoutUser = report.getCoordinate() + "," + report.getReportType() + "," + report.getReportData();
             ReportViewRedis reportViewRedis = reports.get(id);
             String existsKEY = reportViewRedis.getUsername() + "," + reportViewRedis.getCoordinate() + "," + reportViewRedis.getReportType() + "," + reportViewRedis.getReportData();
             if (existsKEY.equals(KEY)){
@@ -50,6 +51,16 @@ public class ReportCache {
                     return false;
                 }
             }
+            if(existsKEY.contains(KEY_WithoutUser)){
+                ReportViewRedis existReport = reports.get(id);
+                long time_difference = LocalDateTime.parse(report.getDate(), formatter).getMinute() -
+                        LocalDateTime.parse(existReport.getDate(), formatter).getMinute();
+                System.out.println(time_difference);
+                if (time_difference <= 2){
+                    System.out.println("Not add");
+                    return false;
+                }
+            }
         }
         return true;
     }
@@ -58,24 +69,24 @@ public class ReportCache {
             reports = redisConfig.redissonClient().getMapCache(nameCache);
             Long KEY = report.getId();
             // no need for permission
-            EReport type = report.getReportType();
-            if(type.equals(EReport.ACCIDENT)){
+            String type = report.getReportType();
+            if(type.equals("accident")){
                 reports.put(KEY, report, reportTiming.getACCIDENT(), TimeUnit.MINUTES);
-            } else if (type.equals(EReport.CAMERA)) {
+            } else if (type.equals("camera")) {
                 reports.put(KEY, report, reportTiming.getCAMERA(), TimeUnit.MINUTES);
-            } else if (type.equals(EReport.MAP_BUGS)) {
+            } else if (type.equals("map_bugs")) {
                 reports.put(KEY, report, reportTiming.getMAPBUGS(), TimeUnit.MINUTES);
-            } else if (type.equals(EReport.EVENTS_ON_WAY)) {
+            } else if (type.equals("events_on_way")) {
                 reports.put(KEY, report, reportTiming.getEVENTSONWAY(), TimeUnit.MINUTES);
-            } else if (type.equals(EReport.POLICE)) {
+            } else if (type.equals("police")) {
                 reports.put(KEY, report, reportTiming.getPOLICE(), TimeUnit.MINUTES);
-            } else if (type.equals(EReport.ROAD_LOCATION)) {
+            } else if (type.equals("road_location")) {
                 reports.put(KEY, report, reportTiming.getROADLOCATION(), TimeUnit.MINUTES);
-            } else if (type.equals(EReport.SPEED_BUMP)) {
+            } else if (type.equals("speed_bump")) {
                 reports.put(KEY, report, reportTiming.getSPEEDBUMP(), TimeUnit.MINUTES);
-            } else if (type.equals(EReport.TRAFFIC)) {
+            } else if (type.equals("traffic")) {
                 reports.put(KEY, report, reportTiming.getTRAFFIC(), TimeUnit.MINUTES);
-            } else if (type.equals(EReport.WEATHER_CONDITIONS)) {
+            } else if (type.equals("weather_conditions")) {
                 reports.put(KEY, report, reportTiming.getWEATHERCONDITIONS(), TimeUnit.MINUTES);
             }
         }
@@ -83,16 +94,16 @@ public class ReportCache {
             // need for permission
             reportsNotChecked = redisConfig.redissonClient().getMapCache(nameCache2);
             String KEY = report.getUsername() + "," + report.getCoordinate() + "," + report.getReportType() + "," + report.getReportData();
-            EReport type = report.getReportType();
-            if (type.equals(EReport.CAMERA)){
+            String type = report.getReportType();
+            if (type.equals("camera")){
                 reportsNotChecked.put(KEY, report, 60, TimeUnit.MINUTES);
-            } else if (type.equals(EReport.MAP_BUGS)) {
+            } else if (type.equals("map_bugs")) {
                 reportsNotChecked.put(KEY, report, 60, TimeUnit.MINUTES);
-            } else if (type.equals(EReport.ROAD_LOCATION)) {
+            } else if (type.equals("road_location")) {
                 reportsNotChecked.put(KEY, report, 60, TimeUnit.MINUTES);
-            } else if (type.equals(EReport.SPEED_BUMP)) {
+            } else if (type.equals("speed_bump")) {
                 reportsNotChecked.put(KEY, report, 60, TimeUnit.MINUTES);
-            } else if (type.equals(EReport.WEATHER_CONDITIONS)) {
+            } else if (type.equals("weather_conditions")) {
                 reportsNotChecked.put(KEY, report, 60, TimeUnit.MINUTES);
             }
         }

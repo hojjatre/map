@@ -7,6 +7,7 @@ import org.hibernate.annotations.Type;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 @Entity
 @Table(name = "report")
@@ -44,14 +45,14 @@ public class Report {
     private Point coordinate;
     @Column(name = "report_data", columnDefinition = "JSON")
     private String reportData;
-    private Date date;
+    private LocalDateTime date;
     @Column(columnDefinition = "BOOLEAN")
     private boolean checkStatus;
     @ManyToOne
     @JoinColumn(name = "user_id")
     private UserImp userImp;
 
-    public Report(EReport reportType, Point coordinate, String reportData, Date date, boolean checkStatus, UserImp userImp) {
+    public Report(EReport reportType, Point coordinate, String reportData, LocalDateTime date, boolean checkStatus, UserImp userImp) {
         this.reportType = reportType;
         this.coordinate = coordinate;
         this.reportData = reportData;
@@ -60,7 +61,7 @@ public class Report {
         this.userImp = userImp;
     }
 
-    public Report(EReport reportType, String reportData, Date date, boolean checkStatus, UserImp userImp) {
+    public Report(EReport reportType, String reportData, LocalDateTime date, boolean checkStatus, UserImp userImp) {
         this.reportType = reportType;
         this.reportData = reportData;
         this.date = date;

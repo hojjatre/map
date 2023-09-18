@@ -17,6 +17,7 @@ import org.redisson.api.RMapCache;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -52,7 +53,8 @@ public class OperatorService {
 
     public ResponseEntity<Object> checkedReport(CheckedRequest checkedRequest) throws ParseException {
         reports = reportCache.getReportsNotChecked();
-        Date currentTime = new Date();
+//        Date currentTime = new Date();
+        LocalDateTime currentTime = LocalDateTime.now();
         reportMapper = ReportMapper.instance;
         String KEY = checkedRequest.getUsername() + "," + checkedRequest.getCoordinate() + "," + EReport.CAMERA + "," +
                 checkedRequest.getReportData();
@@ -62,19 +64,19 @@ public class OperatorService {
             if (reportRedis.getReportType().equals(EReport.CAMERA)){
                 System.out.println(reportRedis.getUsername());
                 report = new Report(reportRedis.getReportType(), stringToGeometry(reportRedis.getCoordinate()), reportRedis.getReportData(),
-                        DateUtils.addMinutes(currentTime, reportTiming.getCAMERA()), true, userRepository.findByUsername(reportRedis.getUsername()));
+                        currentTime.plusMinutes(reportTiming.getCAMERA()), true, userRepository.findByUsername(reportRedis.getUsername()));
             } else if (reportRedis.getReportType().equals(EReport.MAP_BUGS)) {
                 report = new Report(reportRedis.getReportType(), stringToGeometry(reportRedis.getCoordinate()), reportRedis.getReportData(),
-                        DateUtils.addMinutes(currentTime, reportTiming.getMAPBUGS()), true, userRepository.findByUsername(reportRedis.getUsername()));
+                        currentTime.plusMinutes(reportTiming.getMAPBUGS()), true, userRepository.findByUsername(reportRedis.getUsername()));
             } else if (reportRedis.getReportType().equals(EReport.ROAD_LOCATION)) {
                 report = new Report(reportRedis.getReportType(), stringToGeometry(reportRedis.getCoordinate()), reportRedis.getReportData(),
-                        DateUtils.addMinutes(currentTime, reportTiming.getROADLOCATION()), true, userRepository.findByUsername(reportRedis.getUsername()));
+                        currentTime.plusMinutes(reportTiming.getROADLOCATION()), true, userRepository.findByUsername(reportRedis.getUsername()));
             } else if (reportRedis.getReportType().equals(EReport.SPEED_BUMP)) {
                 report = new Report(reportRedis.getReportType(), stringToGeometry(reportRedis.getCoordinate()), reportRedis.getReportData(),
-                        DateUtils.addMinutes(currentTime, reportTiming.getSPEEDBUMP()), true, userRepository.findByUsername(reportRedis.getUsername()));
+                        currentTime.plusMinutes(reportTiming.getSPEEDBUMP()), true, userRepository.findByUsername(reportRedis.getUsername()));
             } else if (reportRedis.getReportType().equals(EReport.WEATHER_CONDITIONS)) {
                 report = new Report(reportRedis.getReportType(), stringToGeometry(reportRedis.getCoordinate()), reportRedis.getReportData(),
-                        DateUtils.addMinutes(currentTime, reportTiming.getWEATHERCONDITIONS()), true, userRepository.findByUsername(reportRedis.getUsername()));
+                        currentTime.plusMinutes(reportTiming.getWEATHERCONDITIONS()), true, userRepository.findByUsername(reportRedis.getUsername()));
             }
             reports.remove(KEY);
             reportRepository.save(report);

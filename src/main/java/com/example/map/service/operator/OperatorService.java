@@ -85,4 +85,10 @@ public class OperatorService {
         }
         return ResponseEntity.ok("This report not exist");
     }
+
+    public ResponseEntity<Object> removeReportIfDateIsExpire(){
+        LocalDateTime currentTime = LocalDateTime.now();
+        reportRepository.deleteReportsIfDateIsExpire(currentTime);
+        return ResponseEntity.ok("Done");
+    }
 }

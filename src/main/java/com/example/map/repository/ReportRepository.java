@@ -4,10 +4,13 @@ import com.example.map.dto.report.ReportView;
 import com.example.map.model.Report;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -16,6 +19,11 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     @EntityGraph(value = "graph.report", type = EntityGraph.EntityGraphType.FETCH)
     @Query("select r from Report r where r.id = :id")
     ReportView findID(@Param("id") Long id);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE from Report r where r.date < :currentTime")
+    void deleteReportsIfDateIsExpire(@Param("currentTime") LocalDateTime currentTime);
 //    @Transactional
 //    @Modifying
 //    @Query(value = "INSERT INTO Report (report_type, coordinate, report_data, date" +

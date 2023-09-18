@@ -15,9 +15,8 @@ import com.example.map.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.time.DateUtils;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.LineString;
-import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.*;
+import org.locationtech.jts.geom.impl.CoordinateArraySequence;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 import org.locationtech.jts.io.WKTWriter;
@@ -28,7 +27,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.postgis.PGgeometry;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -238,27 +239,44 @@ public class ReportService {
         }
         return ResponseEntity.ok("The Report not exist");
     }
-
+    public Coordinate[] convert4326To3857(CoordinateSequence coordinateSequence){
+        Coordinate[] coordinates = coordinateSequence.toCoordinateArray();
+        for (Coordinate coordinate : coordinates){
+            double x = coordinate.x * 20037508.34 / 180.0;
+            double y = Math.log(Math.tan((90.0 + coordinate.y) * Math.PI / 360.0)) / (Math.PI / 180.0);
+            y = y * 20037508.34 / 180.0;
+            coordinate.x = x;
+            coordinate.y = y;
+        }
+        return coordinates;
+    }
     public ResponseEntity<List<ReportViewRedis>> routing(RoutingRequest routingRequest) throws ParseException {
         List<ReportViewRedis> reportsWithinBuffer = new ArrayList<>();
         WKTReader wktReader = new WKTReader();
         LineString userRoute = (LineString) wktReader.read(routingRequest.getCoordinate());
-//        userRoute.setSRID(3857);
+        userRoute.setSRID(4326);
+        CoordinateSequence sourceCoords = userRoute.getCoordinateSequence();
+        Coordinate[] sourceCoordinates = convert4326To3857(sourceCoords);
+        GeometryFactory geometryFactory = new GeometryFactory();
+        CoordinateSequence modifiedCoords = new CoordinateArraySequence(sourceCoordinates);
+        LineString lineString3857 = geometryFactory.createLineString(modifiedCoords);
         BufferParameters bufferParameters = new BufferParameters();
         bufferParameters.setSingleSided(false);
         bufferParameters.setEndCapStyle(BufferParameters.CAP_ROUND);
-        BufferOp bufferOp = new BufferOp(userRoute, bufferParameters);
-        Geometry userRouteGeometry = bufferOp.getResultGeometry(0.0001);
+        BufferOp bufferOp = new BufferOp(lineString3857, bufferParameters);
+//        Geometry userRouteGeometry = bufferOp.getResultGeometry(0.0001);
+        Geometry userRouteGeometry = bufferOp.getResultGeometry(10);
         reports = reportCache.getReports();
         for (Long id :reports.keySet()) {
             ReportViewRedis report = reports.get(id);
             Point reportPoint = (Point) wktReader.read(report.getCoordinate());
-//            reportPoint.setSRID(3857);
-            System.out.println(id);
-            System.out.println(reportPoint);
-            System.out.println(reportPoint.intersects(userRouteGeometry));
-//            if(reportPoint.intersects(userRouteGeometry)){
-            if(userRouteGeometry.intersects(reportPoint)){
+            reportPoint.setSRID(3857);
+            CoordinateSequence targetCodes = reportPoint.getCoordinateSequence();
+            Coordinate[] targetCoordinates = convert4326To3857(targetCodes);
+            geometryFactory = new GeometryFactory();
+            modifiedCoords = new CoordinateArraySequence(targetCoordinates);
+            Point point3857 = geometryFactory.createPoint(modifiedCoords);
+            if(userRouteGeometry.intersects(point3857)){
                 reportsWithinBuffer.add(report);
             }
         }

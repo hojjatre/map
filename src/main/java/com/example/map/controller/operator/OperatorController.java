@@ -30,4 +30,10 @@ public class OperatorController {
     public ResponseEntity<Object> checkedReport(@RequestBody CheckedRequest checkedRequest) throws ParseException {
         return operatorService.checkedReport(checkedRequest);
     }
+
+    @GetMapping("/remove-reports-expire")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Object> removeReportsIfDateIsExpire(){
+        return operatorService.removeReportIfDateIsExpire();
+    }
 }

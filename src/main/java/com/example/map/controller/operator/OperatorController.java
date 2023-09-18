@@ -36,4 +36,10 @@ public class OperatorController {
     public ResponseEntity<Object> removeReportsIfDateIsExpire(){
         return operatorService.removeReportIfDateIsExpire();
     }
+
+    @GetMapping("/query")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<String>> findMostFrequentHourOfDayAndCount(){
+        return operatorService.findMostFrequentHourOfDayAndCount();
+    }
 }

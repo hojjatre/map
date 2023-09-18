@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -24,6 +25,14 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     @Transactional
     @Query("DELETE from Report r where r.date < :currentTime")
     void deleteReportsIfDateIsExpire(@Param("currentTime") LocalDateTime currentTime);
+
+    @Query(nativeQuery = true, value = "SELECT EXTRACT(HOUR FROM r.date) AS hour_of_day, COUNT(*) AS report_count " +
+            "FROM report as r " +
+            "WHERE r.report_type = 'accident' " +
+            "GROUP BY hour_of_day " +
+            "ORDER BY report_count DESC " +
+            "LIMIT 1")
+    List<Object[]> findMostFrequentHourOfDayAndCount();
 //    @Transactional
 //    @Modifying
 //    @Query(value = "INSERT INTO Report (report_type, coordinate, report_data, date" +

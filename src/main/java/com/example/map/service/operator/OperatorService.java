@@ -91,4 +91,15 @@ public class OperatorService {
         reportRepository.deleteReportsIfDateIsExpire(currentTime);
         return ResponseEntity.ok("Done");
     }
+
+    public ResponseEntity<List<String>> findMostFrequentHourOfDayAndCount(){
+        List<Object[]> result = reportRepository.findMostFrequentHourOfDayAndCount();
+        List<String> resultString = new ArrayList<>();
+        for (Object[] row : result) {
+            Integer hourOfDay = (Integer) row[0];
+            Long reportCount = (Long) row[1];
+            resultString.add("Hour of the day: " + hourOfDay + ", Report Count: " + reportCount);
+        }
+        return ResponseEntity.ok(resultString);
+    }
 }

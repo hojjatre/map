@@ -15,7 +15,9 @@ import com.example.map.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.time.DateUtils;
-import org.locationtech.jts.geom.*;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 import org.locationtech.jts.operation.buffer.BufferOp;
@@ -48,7 +50,14 @@ public class ReportService {
         this.userRepository = userRepository;
     }
     public Point stringToGeometry(String wkt) throws ParseException {
-        return (Point) new WKTReader().read(wkt);
+//        GeometryFactory geometryFactory = new GeometryFactory();
+//        Coordinate coordinate = new Coordinate(x, y);
+//        Point point = geometryFactory.createPoint(coordinate);
+//        point.setSRID(4326);
+//        return point;
+        Geometry point = new WKTReader().read(wkt);
+        point.setSRID(4326);
+        return (Point) point;
     }
 
     public ResponseEntity<Object> createReport(Authentication authentication, ReportRequest reportRequest) throws ParseException, JsonProcessingException {
@@ -235,15 +244,20 @@ public class ReportService {
         LineString userRoute = (LineString) wktReader.read(routingRequest.getCoordinate());
         userRoute.setSRID(3857);
         BufferParameters bufferParameters = new BufferParameters();
-        bufferParameters.setSingleSided(true);
+        bufferParameters.setSingleSided(false);
+        bufferParameters.setEndCapStyle(BufferParameters.CAP_ROUND);
         BufferOp bufferOp = new BufferOp(userRoute, bufferParameters);
         Geometry userRouteGeometry = bufferOp.getResultGeometry(10);
         reports = reportCache.getReports();
         for (Long id :reports.keySet()) {
             ReportViewRedis report = reports.get(id);
             Point reportPoint = (Point) wktReader.read(report.getCoordinate());
-            reportPoint.setSRID(3857);
-            if(reportPoint.intersects(userRouteGeometry)){
+//            reportPoint.setSRID(3857);
+            System.out.println(id);
+            System.out.println(reportPoint);
+            System.out.println(reportPoint.intersects(userRouteGeometry));
+//            if(reportPoint.intersects(userRouteGeometry)){
+            if(userRouteGeometry.intersects(reportPoint)){
                 reportsWithinBuffer.add(report);
             }
         }

@@ -15,7 +15,7 @@ import java.util.Date;
 @AllArgsConstructor
 public class ReportViewRedis {
     private Long id;
-    private EReport reportType;
+    private String reportType;
     private String coordinate;
     private String reportData;
     private String date;

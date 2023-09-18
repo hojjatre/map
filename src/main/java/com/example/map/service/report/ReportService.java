@@ -243,12 +243,12 @@ public class ReportService {
         List<ReportViewRedis> reportsWithinBuffer = new ArrayList<>();
         WKTReader wktReader = new WKTReader();
         LineString userRoute = (LineString) wktReader.read(routingRequest.getCoordinate());
-        userRoute.setSRID(3857);
+//        userRoute.setSRID(3857);
         BufferParameters bufferParameters = new BufferParameters();
         bufferParameters.setSingleSided(false);
         bufferParameters.setEndCapStyle(BufferParameters.CAP_ROUND);
         BufferOp bufferOp = new BufferOp(userRoute, bufferParameters);
-        Geometry userRouteGeometry = bufferOp.getResultGeometry(10);
+        Geometry userRouteGeometry = bufferOp.getResultGeometry(0.0001);
         reports = reportCache.getReports();
         for (Long id :reports.keySet()) {
             ReportViewRedis report = reports.get(id);

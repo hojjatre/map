@@ -46,7 +46,6 @@ public class ReportService {
     private ReportTiming reportTiming = new ReportTiming();
     private final UserRepository userRepository;
     private ReportMapper reportMapper;
-    private RMapCache<Long, ReportViewRedis> reports;
     public ReportService(ReportRepository reportRepository, ReportCache reportCache, UserRepository userRepository) {
         this.reportRepository = reportRepository;
         this.reportCache = reportCache;
@@ -268,23 +267,6 @@ public class ReportService {
                 return new ResponseEntity<>(reportMapper.entityToDTO(report), HttpStatus.OK);
             }
         }
-//        reports = reportCache.getReports();
-//        if (reports.containsKey(id)){
-//            ReportViewRedis reportRedis = reports.get(id);
-//            if (decision.equals("like")){
-//                report.setDate(LocalDateTime.parse(reportRedis.getDate(), formatter).plusMinutes(5));
-//                reports.remove(id);
-//                reportRepository.save(report);
-//                reports.put(id, reportMapper.entityToDTO(report));
-//                return new ResponseEntity<>(reportMapper.entityToDTO(report), HttpStatus.OK);
-//            } else if (decision.equals("dislike")) {
-//                report.setDate(LocalDateTime.parse(reportRedis.getDate(), formatter).minusMinutes(5));
-//                reports.remove(id);
-//                reportRepository.save(report);
-//                reports.put(id, reportMapper.entityToDTO(report));
-//                return new ResponseEntity<>(reportMapper.entityToDTO(report), HttpStatus.OK);
-//            }
-//        }
         return ResponseEntity.ok("The Report not exist");
     }
     public Coordinate[] convert4326To3857(CoordinateSequence coordinateSequence){
@@ -298,34 +280,49 @@ public class ReportService {
         }
         return coordinates;
     }
-    //TODO : cleaning
-    public ResponseEntity<List<ReportViewRedis>> routing(RoutingRequest routingRequest) throws ParseException {
-        List<ReportViewRedis> reportsWithinBuffer = new ArrayList<>();
+
+    public LineString createUserRouteGeometry(String coordinate) throws ParseException {
         WKTReader wktReader = new WKTReader();
-        LineString userRoute = (LineString) wktReader.read(routingRequest.getCoordinate());
+        LineString userRoute = (LineString) wktReader.read(coordinate);
         userRoute.setSRID(4326);
         CoordinateSequence sourceCoords = userRoute.getCoordinateSequence();
         Coordinate[] sourceCoordinates = convert4326To3857(sourceCoords);
         GeometryFactory geometryFactory = new GeometryFactory();
         CoordinateSequence modifiedCoords = new CoordinateArraySequence(sourceCoordinates);
         LineString lineString3857 = geometryFactory.createLineString(modifiedCoords);
+        return lineString3857;
+    }
+
+    public Geometry createBufferedGeometry(LineString geometry, double bufferDistance){
         BufferParameters bufferParameters = new BufferParameters();
         bufferParameters.setSingleSided(false);
         bufferParameters.setEndCapStyle(BufferParameters.CAP_ROUND);
-        BufferOp bufferOp = new BufferOp(lineString3857, bufferParameters);
-        Geometry userRouteGeometry = bufferOp.getResultGeometry(10);
+        BufferOp bufferOp = new BufferOp(geometry, bufferParameters);
+        Geometry userRouteGeometry = bufferOp.getResultGeometry(bufferDistance);
+        return userRouteGeometry;
+    }
+
+    public Point createPointGeometry(String coordinate) throws ParseException{
+        WKTReader wktReader = new WKTReader();
+        Point reportPoint = (Point) wktReader.read(coordinate);
+        reportPoint.setSRID(4326);
+        CoordinateSequence targetCodes = reportPoint.getCoordinateSequence();
+        Coordinate[] targetCoordinates = convert4326To3857(targetCodes);
+        GeometryFactory geometryFactory = new GeometryFactory();
+        CoordinateSequence modifiedCoords = new CoordinateArraySequence(targetCoordinates);
+        Point point3857 = geometryFactory.createPoint(modifiedCoords);
+        return point3857;
+    }
+
+    public ResponseEntity<List<ReportViewRedis>> routing(RoutingRequest routingRequest) throws ParseException {
+        List<ReportViewRedis> reportsWithinBuffer = new ArrayList<>();
+
+        LineString lineString3857 = createUserRouteGeometry(routingRequest.getCoordinate());
+        Geometry userRouteGeometry = createBufferedGeometry(lineString3857, 10);
+
         List<ReportViewRedis> reportsList = reportCache.getListReports();
-//        reports = reportCache.getReports();
-//        for (Long id :reports.keySet()) {
         for (ReportViewRedis report :reportsList) {
-//            ReportViewRedis report = reports.get(id);
-            Point reportPoint = (Point) wktReader.read(report.getCoordinate());
-            reportPoint.setSRID(3857);
-            CoordinateSequence targetCodes = reportPoint.getCoordinateSequence();
-            Coordinate[] targetCoordinates = convert4326To3857(targetCodes);
-            geometryFactory = new GeometryFactory();
-            modifiedCoords = new CoordinateArraySequence(targetCoordinates);
-            Point point3857 = geometryFactory.createPoint(modifiedCoords);
+            Point point3857 = createPointGeometry(report.getCoordinate());
             if(userRouteGeometry.intersects(point3857)){
                 reportsWithinBuffer.add(report);
             }

@@ -1,6 +1,6 @@
 package com.example.map.dto.operator;
 
-import com.example.map.model.EReport;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

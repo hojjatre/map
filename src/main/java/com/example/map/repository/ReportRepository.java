@@ -33,12 +33,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
             "ORDER BY report_count DESC " +
             "LIMIT 1")
     List<Object[]> findMostFrequentHourOfDayAndCount();
-//    @Transactional
-//    @Modifying
-//    @Query(value = "INSERT INTO Report (report_type, coordinate, report_data, date" +
-//            ", check_status, user_id) VALUES (:reportType, ST_GeomFromText(:coordinate,4326), :reportData, :reportDate, :check, :user_id)",
-//            nativeQuery = true)
-//    void insert(EReport reportType, String coordinate, String reportData, Date reportDate, boolean check, Long user_id);
+
 
 
 }

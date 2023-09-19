@@ -9,7 +9,6 @@ import com.example.map.model.EReport;
 import com.example.map.model.Report;
 import com.example.map.repository.ReportRepository;
 import com.example.map.repository.UserRepository;
-import org.apache.commons.lang3.time.DateUtils;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Service
@@ -28,7 +26,6 @@ public class OperatorService {
     private final ReportRepository reportRepository;
     private final UserRepository userRepository;
     private ReportTiming reportTiming = new ReportTiming();
-    private RMapCache<String,ReportViewRedis> reports;
     private ReportMapper reportMapper;
     public OperatorService(ReportCache reportCache, ReportRepository reportRepository, UserRepository userRepository) {
         this.reportCache = reportCache;
@@ -42,7 +39,6 @@ public class OperatorService {
 
     public ResponseEntity<List<ReportViewRedis>> allNotCheckReport(){
         List<ReportViewRedis> reportList = new ArrayList<>();
-//        reports = reportCache.getReportsNotChecked();
         List<ReportViewRedis> reportRedis = reportCache.getListReportsNotChecked();
         for (ReportViewRedis report:reportRedis) {
             if (!report.getCheckStatus()) {
@@ -53,8 +49,6 @@ public class OperatorService {
     }
 
     public ResponseEntity<Object> checkedReport(CheckedRequest checkedRequest) throws ParseException {
-//        reports = reportCache.getReportsNotChecked();
-//        Date currentTime = new Date();
         LocalDateTime currentTime = LocalDateTime.now();
         reportMapper = ReportMapper.instance;
         String KEY = "";
@@ -75,9 +69,7 @@ public class OperatorService {
                     checkedRequest.getReportData();
         }
         ReportViewRedis reportRedis = reportCache.getReportNotCheckByKEY(KEY);
-//        if (reports.containsKey(KEY)){
         if (reportRedis!=null){
-//            ReportViewRedis reportRedis = reports.get(KEY);
             Report report = null;
             if (reportRedis.getReportType().equals("camera")){
                 System.out.println(reportRedis.getUsername());
@@ -96,7 +88,6 @@ public class OperatorService {
                 report = new Report(EReport.WEATHER_CONDITIONS, stringToGeometry(reportRedis.getCoordinate()), reportRedis.getReportData(),
                         currentTime.plusMinutes(reportTiming.getWEATHERCONDITIONS()), true, userRepository.findByUsername(reportRedis.getUsername()));
             }
-//            reports.remove(KEY);
             reportCache.removeByKey(KEY);
             reportRepository.save(report);
             reportCache.addReportToCache(reportMapper.entityToDTO(report));
@@ -113,12 +104,6 @@ public class OperatorService {
 
     public ResponseEntity<List<Object[]>> findMostFrequentHourOfDayAndCount(){
         List<Object[]> result = reportRepository.findMostFrequentHourOfDayAndCount();
-//        List<String> resultString = new ArrayList<>();
-//        for (Object[] row : result) {
-//            Integer hourOfDay = (Integer) row[0];
-//            Long reportCount = (Long) row[1];
-//            resultString.add("Hour of the day: " + hourOfDay + ", Report Count: " + reportCount);
-//        }
         return ResponseEntity.ok(result);
     }
 }

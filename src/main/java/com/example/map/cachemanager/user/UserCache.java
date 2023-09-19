@@ -20,7 +20,7 @@ public class UserCache {
 
     public void tokenCache(UserInfoResponse userInfoResponse){
         userCache = redisConfig.redissonClient().getMapCache(nameCache);
-        userCache.put(userInfoResponse.getUsername(), userInfoResponse.getToken(), 60, TimeUnit.MINUTES);
+        userCache.put(userInfoResponse.getUsername(), userInfoResponse.getToken(), 50, TimeUnit.MINUTES);
     }
 
     public RMapCache<String, String> getUserCache() {

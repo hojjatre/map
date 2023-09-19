@@ -6,7 +6,7 @@ import lombok.Setter;
 import org.locationtech.jts.geom.Point;
 
 import java.time.LocalDateTime;
-import java.util.Date;
+
 @Entity
 @Table(name = "report")
 @Getter
@@ -38,8 +38,6 @@ public class Report {
     private Long id;
     @Enumerated(EnumType.STRING)
     private EReport reportType;
-//    @Type(type = "org.hibernate.spatial.GeometryType")
-//    @Column(columnDefinition = "point")
     private Point coordinate;
     @Column(name = "report_data", columnDefinition = "JSON")
     private String reportData;

@@ -25,7 +25,6 @@ public class ReportCache {
 
     RMapCache<String,ReportViewRedis> reportsNotChecked;
     RMapCache<Long,ReportViewRedis> reports;
-//    RSetCache<ReportViewRedis> reports;
     private final RedisConfig redisConfig;
     private final String nameCache = "report";
     private final String nameCache2 = "reportNotChecked";
@@ -48,10 +47,8 @@ public class ReportCache {
                 ReportViewRedis existReport = reports.get(id);
                 long time_difference = LocalDateTime.parse(report.getDate(), formatter).getMinute() -
                         LocalDateTime.parse(existReport.getDate(), formatter).getMinute();
-//            long minutes_difference = (time_difference / (1000*60)) % 60;
                 System.out.println(time_difference);
                 if (time_difference <= 5){
-                    System.out.println("Not add");
                     return false;
                 }
             }
@@ -61,7 +58,6 @@ public class ReportCache {
                         LocalDateTime.parse(existReport.getDate(), formatter).getMinute();
                 System.out.println(time_difference);
                 if (time_difference <= 2){
-                    System.out.println("Not add");
                     return false;
                 }
             }

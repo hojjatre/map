@@ -131,6 +131,14 @@ public class ReportCache {
         return null;
     }
 
+    public ReportViewRedis getReportNotCheckByKEY(String KEYinput){
+        reportsNotChecked = redisConfig.redissonClient().getMapCache(nameCache2);
+        if (reportsNotChecked.containsKey(KEYinput)){
+            return reportsNotChecked.get(KEYinput);
+        }
+        return null;
+    }
+
     public void removeById(Long id){
         reports = redisConfig.redissonClient().getMapCache(nameCache);
         reports.remove(id);
@@ -149,5 +157,16 @@ public class ReportCache {
         reports = redisConfig.redissonClient().getMapCache(nameCache);
         ArrayList<ReportViewRedis> reportViewRedis = new ArrayList<>(reports.values());
         return reportViewRedis;
+    }
+
+    public List<ReportViewRedis> getListReportsNotChecked(){
+        reports = redisConfig.redissonClient().getMapCache(nameCache2);
+        ArrayList<ReportViewRedis> reportViewRedis = new ArrayList<>(reports.values());
+        return reportViewRedis;
+    }
+
+    public void removeByKey(String KEYinput){
+        reportsNotChecked = redisConfig.redissonClient().getMapCache(nameCache2);
+        reportsNotChecked.remove(KEYinput);
     }
 }

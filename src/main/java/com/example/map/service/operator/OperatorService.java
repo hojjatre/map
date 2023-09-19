@@ -42,17 +42,18 @@ public class OperatorService {
 
     public ResponseEntity<List<ReportViewRedis>> allNotCheckReport(){
         List<ReportViewRedis> reportList = new ArrayList<>();
-        reports = reportCache.getReportsNotChecked();
-        for (String key:reports.keySet()) {
-            if (!reports.get(key).getCheckStatus()) {
-                reportList.add(reports.get(key));
+//        reports = reportCache.getReportsNotChecked();
+        List<ReportViewRedis> reportRedis = reportCache.getListReportsNotChecked();
+        for (ReportViewRedis report:reportRedis) {
+            if (!report.getCheckStatus()) {
+                reportList.add(report);
             }
         }
         return ResponseEntity.ok(reportList);
     }
 
     public ResponseEntity<Object> checkedReport(CheckedRequest checkedRequest) throws ParseException {
-        reports = reportCache.getReportsNotChecked();
+//        reports = reportCache.getReportsNotChecked();
 //        Date currentTime = new Date();
         LocalDateTime currentTime = LocalDateTime.now();
         reportMapper = ReportMapper.instance;
@@ -73,8 +74,10 @@ public class OperatorService {
             KEY = checkedRequest.getUsername() + "," + checkedRequest.getCoordinate() + "," + EReport.WEATHER_CONDITIONS + "," +
                     checkedRequest.getReportData();
         }
-        if (reports.containsKey(KEY)){
-            ReportViewRedis reportRedis = reports.get(KEY);
+        ReportViewRedis reportRedis = reportCache.getReportNotCheckByKEY(KEY);
+//        if (reports.containsKey(KEY)){
+        if (reportRedis!=null){
+//            ReportViewRedis reportRedis = reports.get(KEY);
             Report report = null;
             if (reportRedis.getReportType().equals("camera")){
                 System.out.println(reportRedis.getUsername());
@@ -93,7 +96,8 @@ public class OperatorService {
                 report = new Report(EReport.WEATHER_CONDITIONS, stringToGeometry(reportRedis.getCoordinate()), reportRedis.getReportData(),
                         currentTime.plusMinutes(reportTiming.getWEATHERCONDITIONS()), true, userRepository.findByUsername(reportRedis.getUsername()));
             }
-            reports.remove(KEY);
+//            reports.remove(KEY);
+            reportCache.removeByKey(KEY);
             reportRepository.save(report);
             reportCache.addReportToCache(reportMapper.entityToDTO(report));
             return ResponseEntity.ok(reportMapper.entityToDTO(report));

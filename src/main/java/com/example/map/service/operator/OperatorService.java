@@ -56,8 +56,23 @@ public class OperatorService {
 //        Date currentTime = new Date();
         LocalDateTime currentTime = LocalDateTime.now();
         reportMapper = ReportMapper.instance;
-        String KEY = checkedRequest.getUsername() + "," + checkedRequest.getCoordinate() + "," + EReport.CAMERA + "," +
-                checkedRequest.getReportData();
+        String KEY = "";
+        if (checkedRequest.getReportType().equals("camera")){
+            KEY = checkedRequest.getUsername() + "," + checkedRequest.getCoordinate() + "," + EReport.CAMERA + "," +
+                    checkedRequest.getReportData();
+        } else if (checkedRequest.getReportType().equals("road_location")) {
+            KEY = checkedRequest.getUsername() + "," + checkedRequest.getCoordinate() + "," + EReport.ROAD_LOCATION + "," +
+                    checkedRequest.getReportData();
+        } else if (checkedRequest.getReportType().equals("map_bugs")) {
+            KEY = checkedRequest.getUsername() + "," + checkedRequest.getCoordinate() + "," + EReport.MAP_BUGS + "," +
+                    checkedRequest.getReportData();
+        } else if (checkedRequest.getReportType().equals("speed_bump")) {
+            KEY = checkedRequest.getUsername() + "," + checkedRequest.getCoordinate() + "," + EReport.SPEED_BUMP + "," +
+                    checkedRequest.getReportData();
+        } else if (checkedRequest.getReportType().equals("weather_conditions")) {
+            KEY = checkedRequest.getUsername() + "," + checkedRequest.getCoordinate() + "," + EReport.WEATHER_CONDITIONS + "," +
+                    checkedRequest.getReportData();
+        }
         if (reports.containsKey(KEY)){
             ReportViewRedis reportRedis = reports.get(KEY);
             Report report = null;

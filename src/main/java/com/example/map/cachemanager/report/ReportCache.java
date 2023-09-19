@@ -2,18 +2,22 @@ package com.example.map.cachemanager.report;
 
 import com.example.map.config.RedisConfig;
 import com.example.map.config.ReportTiming;
+import com.example.map.dto.report.ReportMapper;
 import com.example.map.dto.report.ReportView;
 import com.example.map.dto.report.ReportViewRedis;
 import com.example.map.model.EReport;
 import com.example.map.model.Report;
 import lombok.Getter;
 import org.redisson.api.RList;
+import org.redisson.api.RLock;
 import org.redisson.api.RMapCache;
 import org.redisson.api.RSetCache;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -119,4 +123,31 @@ public class ReportCache {
         return reportsNotChecked;
     }
 
+    public ReportViewRedis getReportById(Long id){
+        reports = redisConfig.redissonClient().getMapCache(nameCache);
+        if (reports.containsKey(id)){
+            return reports.get(id);
+        }
+        return null;
+    }
+
+    public void removeById(Long id){
+        reports = redisConfig.redissonClient().getMapCache(nameCache);
+        reports.remove(id);
+    }
+
+    public void putNew(Long id, ReportMapper reportMapper, Report report){
+        reports = redisConfig.redissonClient().getMapCache(nameCache);
+        reports.put(id, reportMapper.entityToDTO(report));
+    }
+
+    public RLock getLock(){
+        return redisConfig.redissonClient().getLock("Lock");
+    }
+
+    public List<ReportViewRedis> getListReports(){
+        reports = redisConfig.redissonClient().getMapCache(nameCache);
+        ArrayList<ReportViewRedis> reportViewRedis = new ArrayList<>(reports.values());
+        return reportViewRedis;
+    }
 }

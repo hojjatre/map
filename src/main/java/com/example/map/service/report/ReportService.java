@@ -22,6 +22,7 @@ import org.locationtech.jts.io.WKTReader;
 import org.locationtech.jts.io.WKTWriter;
 import org.locationtech.jts.operation.buffer.BufferOp;
 import org.locationtech.jts.operation.buffer.BufferParameters;
+import org.redisson.api.RLock;
 import org.redisson.api.RMapCache;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,17 +53,13 @@ public class ReportService {
         this.userRepository = userRepository;
     }
     public Point stringToGeometry(String wkt) throws ParseException {
-//        GeometryFactory geometryFactory = new GeometryFactory();
-//        Coordinate coordinate = new Coordinate(x, y);
-//        Point point = geometryFactory.createPoint(coordinate);
-//        point.setSRID(4326);
-//        return point;
         Geometry point = new WKTReader().read(wkt);
         point.setSRID(4326);
         return (Point) point;
     }
 
     public ResponseEntity<Object> createReport(Authentication authentication, ReportRequest reportRequest) throws ParseException, JsonProcessingException {
+        RLock lock = reportCache.getLock();
         UserImp userImp = userRepository.findByUsername(authentication.getName());
         LocalDateTime currentTime = LocalDateTime.now();
         reportMapper = ReportMapper.instance;
@@ -80,11 +77,16 @@ public class ReportService {
             String jsonData = objectMapper.writeValueAsString(accident);
             report = new Report(EReport.ACCIDENT, stringToGeometry(reportRequest.getCoordinate()), jsonData,
                     currentTime.plusMinutes(reportTiming.getACCIDENT()), true, userImp);
-            if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
-                reportRepository.save(report);
-                reportCache.addReportToCache(reportMapper.entityToDTO(report));
-            } else {
-                return ResponseEntity.ok("It's SCAM.");
+            lock.lock();
+            try {
+                if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
+                    reportRepository.save(report);
+                    reportCache.addReportToCache(reportMapper.entityToDTO(report));
+                } else {
+                    return ResponseEntity.ok("It's SCAM.");
+                }
+            }finally {
+                lock.unlock();
             }
         } else if (reportRequest.getReportType().equals("camera")) {
             Camera camera = new Camera();
@@ -109,11 +111,16 @@ public class ReportService {
             String jsonData = objectMapper.writeValueAsString(eventsOnWay);
             report = new Report(EReport.EVENTS_ON_WAY, stringToGeometry(reportRequest.getCoordinate()), jsonData,
                     currentTime.plusMinutes(reportTiming.getEVENTSONWAY()), true, userImp);
-            if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
-                reportRepository.save(report);
-                reportCache.addReportToCache(reportMapper.entityToDTO(report));
-            }else {
-                return ResponseEntity.ok("It's SCAM.");
+            lock.lock();
+            try {
+                if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
+                    reportRepository.save(report);
+                    reportCache.addReportToCache(reportMapper.entityToDTO(report));
+                } else {
+                    return ResponseEntity.ok("It's SCAM.");
+                }
+            }finally {
+                lock.unlock();
             }
         } else if (reportRequest.getReportType().equals("map_bugs")) {
             MapBugs mapBugs = new MapBugs();
@@ -146,11 +153,16 @@ public class ReportService {
             String jsonData = objectMapper.writeValueAsString(police);
             report = new Report(EReport.POLICE, stringToGeometry(reportRequest.getCoordinate()), jsonData,
                     currentTime.plusMinutes(reportTiming.getPOLICE()), true, userImp);
-            if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
-                reportRepository.save(report);
-                reportCache.addReportToCache(reportMapper.entityToDTO(report));
-            }else {
-                return ResponseEntity.ok("It's SCAM.");
+            lock.lock();
+            try {
+                if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
+                    reportRepository.save(report);
+                    reportCache.addReportToCache(reportMapper.entityToDTO(report));
+                } else {
+                    return ResponseEntity.ok("It's SCAM.");
+                }
+            }finally {
+                lock.unlock();
             }
         } else if (reportRequest.getReportType().equals("road_location")) {
             RoadLocation roadLocation = new RoadLocation();
@@ -192,11 +204,16 @@ public class ReportService {
             String jsonData = objectMapper.writeValueAsString(traffic);
             report = new Report(EReport.TRAFFIC, stringToGeometry(reportRequest.getCoordinate()), jsonData,
                     currentTime.plusMinutes(reportTiming.getTRAFFIC()), true, userImp);
-            if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
-                reportRepository.save(report);
-                reportCache.addReportToCache(reportMapper.entityToDTO(report));
-            }else {
-                return ResponseEntity.ok("It's SCAM.");
+            lock.lock();
+            try {
+                if (reportCache.checkNotScam(reportMapper.entityToDTO(report))){
+                    reportRepository.save(report);
+                    reportCache.addReportToCache(reportMapper.entityToDTO(report));
+                } else {
+                    return ResponseEntity.ok("It's SCAM.");
+                }
+            }finally {
+                lock.unlock();
             }
         } else if (reportRequest.getReportType().equals("weather_conditions")) {
             WeatherConditions weatherConditions = new WeatherConditions();
@@ -216,27 +233,58 @@ public class ReportService {
     }
 
     public ResponseEntity<Object> likeOrDislikeReport(Long id, String decision) throws ParseException {
+        RLock lock = reportCache.getLock();
         DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
         Optional<Report> optionalReport = reportRepository.findById(id);
         Report report = optionalReport.get();
+        LocalDateTime current_time = LocalDateTime.now();
+        if (current_time.isAfter(report.getDate())){
+            return ResponseEntity.ok("This report is expire.");
+        }
         reportMapper = ReportMapper.instance;
-        reports = reportCache.getReports();
-        if (reports.containsKey(id)){
-            ReportViewRedis reportRedis = reports.get(id);
+        ReportViewRedis reportRedis = reportCache.getReportById(id);
+        if (reportRedis != null){
             if (decision.equals("like")){
                 report.setDate(LocalDateTime.parse(reportRedis.getDate(), formatter).plusMinutes(5));
-                reports.remove(id);
-                reportRepository.save(report);
-                reports.put(id, reportMapper.entityToDTO(report));
+                lock.lock();
+                try {
+                    reportCache.removeById(id);
+                    reportRepository.save(report);
+                    reportCache.putNew(id, reportMapper, report);
+                }finally {
+                    lock.unlock();
+                }
                 return new ResponseEntity<>(reportMapper.entityToDTO(report), HttpStatus.OK);
             } else if (decision.equals("dislike")) {
                 report.setDate(LocalDateTime.parse(reportRedis.getDate(), formatter).minusMinutes(5));
-                reports.remove(id);
-                reportRepository.save(report);
-                reports.put(id, reportMapper.entityToDTO(report));
+                lock.lock();
+                try {
+                    reportCache.removeById(id);
+                    reportRepository.save(report);
+                    reportCache.putNew(id, reportMapper, report);
+                }finally {
+                    lock.unlock();
+                }
                 return new ResponseEntity<>(reportMapper.entityToDTO(report), HttpStatus.OK);
             }
         }
+//        reports = reportCache.getReports();
+//        if (reports.containsKey(id)){
+//            ReportViewRedis reportRedis = reports.get(id);
+//            if (decision.equals("like")){
+//                report.setDate(LocalDateTime.parse(reportRedis.getDate(), formatter).plusMinutes(5));
+//                reports.remove(id);
+//                reportRepository.save(report);
+//                reports.put(id, reportMapper.entityToDTO(report));
+//                return new ResponseEntity<>(reportMapper.entityToDTO(report), HttpStatus.OK);
+//            } else if (decision.equals("dislike")) {
+//                report.setDate(LocalDateTime.parse(reportRedis.getDate(), formatter).minusMinutes(5));
+//                reports.remove(id);
+//                reportRepository.save(report);
+//                reports.put(id, reportMapper.entityToDTO(report));
+//                return new ResponseEntity<>(reportMapper.entityToDTO(report), HttpStatus.OK);
+//            }
+//        }
         return ResponseEntity.ok("The Report not exist");
     }
     public Coordinate[] convert4326To3857(CoordinateSequence coordinateSequence){
@@ -250,6 +298,7 @@ public class ReportService {
         }
         return coordinates;
     }
+    //TODO : cleaning
     public ResponseEntity<List<ReportViewRedis>> routing(RoutingRequest routingRequest) throws ParseException {
         List<ReportViewRedis> reportsWithinBuffer = new ArrayList<>();
         WKTReader wktReader = new WKTReader();
@@ -264,11 +313,12 @@ public class ReportService {
         bufferParameters.setSingleSided(false);
         bufferParameters.setEndCapStyle(BufferParameters.CAP_ROUND);
         BufferOp bufferOp = new BufferOp(lineString3857, bufferParameters);
-//        Geometry userRouteGeometry = bufferOp.getResultGeometry(0.0001);
         Geometry userRouteGeometry = bufferOp.getResultGeometry(10);
-        reports = reportCache.getReports();
-        for (Long id :reports.keySet()) {
-            ReportViewRedis report = reports.get(id);
+        List<ReportViewRedis> reportsList = reportCache.getListReports();
+//        reports = reportCache.getReports();
+//        for (Long id :reports.keySet()) {
+        for (ReportViewRedis report :reportsList) {
+//            ReportViewRedis report = reports.get(id);
             Point reportPoint = (Point) wktReader.read(report.getCoordinate());
             reportPoint.setSRID(3857);
             CoordinateSequence targetCodes = reportPoint.getCoordinateSequence();

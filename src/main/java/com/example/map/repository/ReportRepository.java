@@ -28,7 +28,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
 
     @Query(nativeQuery = true, value = "SELECT EXTRACT(HOUR FROM r.date) AS hour_of_day, COUNT(*) AS report_count " +
             "FROM report as r " +
-            "WHERE r.report_type = 'accident' " +
+            "WHERE r.report_type = 'ACCIDENT' " +
             "GROUP BY hour_of_day " +
             "ORDER BY report_count DESC " +
             "LIMIT 1")

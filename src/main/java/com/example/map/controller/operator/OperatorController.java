@@ -39,7 +39,7 @@ public class OperatorController {
 
     @GetMapping("/query")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<String>> findMostFrequentHourOfDayAndCount(){
+    public ResponseEntity<List<Object[]>> findMostFrequentHourOfDayAndCount(){
         return operatorService.findMostFrequentHourOfDayAndCount();
     }
 }
